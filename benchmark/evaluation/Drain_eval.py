@@ -187,18 +187,18 @@ if __name__ == "__main__":
             print(num_clusters_before)
 
             predictions = []
-            # Parse the test split without allowing new clusters
+            # Parse the test split using frozen templates (no updates or new clusters)
             for _, line in df_log.iloc[train_size:].iterrows():
                 logmessageL = parser.preprocess(line['Content']).strip().split()
                 matchCluster = parser.treeSearch(rootNode, logmessageL)
                 if matchCluster is None:
-                    template_tokens = ['<*>'] if len(logmessageL) == 0 else ['<*>'] * len(logmessageL)
-                    template_str = ' '.join(template_tokens)
-                    template_id = hashlib.md5(template_str.encode('utf-8')).hexdigest()[0:8]
+                    # Unmatched test lines use constant frozen identifiers
+                    template_str = "UNMATCHED"
+                    template_id = "UNMATCHED"
                 else:
+                    # Matched lines reuse the trained template without modifying it
                     template_str = ' '.join(matchCluster.logTemplate)
                     template_id = hashlib.md5(template_str.encode('utf-8')).hexdigest()[0:8]
-                    matchCluster.logIDL.append(line['LineId'])
 
                 parsed_row = line.copy()
                 parsed_row['EventId'] = template_id
@@ -209,6 +209,8 @@ if __name__ == "__main__":
 
             num_clusters_after = len(logCluL)
             print(num_clusters_after)
+            # Hard freeze assertion to ensure template count is unchanged
+            assert num_clusters_after == num_clusters_before, "Frozen parsing modified template count"
 
             parse_time = time.time() - parse_start
             parsed_df = pd.DataFrame(predictions)
