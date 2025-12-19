@@ -102,7 +102,13 @@ def common_args():
                         default=0)
     parser.add_argument('--example_size', type=int,
                         help="Set this if you want to test on frequent dataset",
-                        default=0)    
+                        default=0)
+    parser.add_argument('--freeze',
+                        help="Set this if you want to run additional frozen evaluation",
+                        action='store_true')
+    parser.add_argument('--ratio', type=float,
+                        help="Train/Test split ratio for frozen evaluation",
+                        default=0.1)
     args = parser.parse_args()
     return args
 
