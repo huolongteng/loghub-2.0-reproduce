@@ -211,6 +211,27 @@ class LogParser:
             os.remove(self.para.savePath+self.logname+'editDistance.csv')
             os.remove(self.para.savePath+self.logname+'distArray.csv')
 
+    def match(self, log_line):
+        processed = self.preprocess(log_line)
+        tokens = processed.strip().split()
+        for template in self.templates:
+            if not template:
+                continue
+            pos = 0
+            matched = True
+            for token in template:
+                while pos < len(tokens) and tokens[pos] != token:
+                    pos += 1
+                if pos == len(tokens):
+                    matched = False
+                    break
+                pos += 1
+            if matched:
+                template_str = ' '.join(template)
+                event_id = hashlib.md5(template_str.encode('utf-8')).hexdigest()[0:8]
+                return event_id, template_str
+        return "UNMATCHED", "UNMATCHED"
+
     def log_to_dataframe(self, log_file, regex, headers, logformat):
         ''' Function to transform log file to dataframe '''
         log_messages = []
