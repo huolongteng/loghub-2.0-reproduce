@@ -118,6 +118,9 @@ cd benchmark/
 
   Since these methods are quite different with other log parsers, and they requires a GPU to support efficient parsing, we seperate their environments from other log parsers. Please refer to the README file of [LogPPT](benchmark/LogPPT/README.md) or [UniParser](benchmark/UniParser/README.md) to use one-click script to parse and evaluate each log parsers respectively.
 
+## New features
+- Evaluation methods with a frozen template set ,which is trained on a specific ratio of datasets. 
+
 
 ## 🔥 Citation
 

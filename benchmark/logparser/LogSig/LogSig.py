@@ -275,6 +275,41 @@ class LogParser:
         self.writeResultToFile()
         print('Parsing done. [Time taken: {!s}]'.format(datetime.now() - start_time))
 
+    def match(self, log_line):
+        # clean the raw line using the configured regex list
+        cleaned_line = log_line
+        if self.para.rex:
+            for currentRex in self.para.rex:
+                cleaned_line = re.sub(currentRex, '', cleaned_line)
+
+        # split words in a straightforward way
+        tokens = cleaned_line.strip().split()
+        if len(tokens) == 0:
+            tokens = [' ']
+
+        # search the best signature by counting token overlaps
+        best_index = -1
+        best_score = -1
+        for idx, sig in enumerate(self.signature):
+            if len(sig) == 0:
+                continue
+            score = 0
+            for word in sig:
+                if word in tokens:
+                    score += 1
+            if score > best_score:
+                best_score = score
+                best_index = idx
+
+        # return fallback when nothing matches
+        if best_index == -1 or best_score <= 0:
+            return "UNMATCHED", "UNMATCHED"
+
+        # compute the same EventId logic as training output
+        event_template = ' '.join(self.signature[best_index])
+        event_id = hashlib.md5(event_template.encode('utf-8')).hexdigest()[0:8]
+        return event_id, event_template
+
 
 def potenFunc(curGroupIndex, termPairLogNumLD, logNumPerGroup, lineNum, termpairLT, k):
     maxDeltaD = 0

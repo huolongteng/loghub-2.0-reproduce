@@ -634,3 +634,21 @@ class LogParser:
         parameter_list = parameter_list[0] if parameter_list else ()
         parameter_list = list(parameter_list) if isinstance(parameter_list, tuple) else [parameter_list]
         return parameter_list
+
+    def match_event(self, tokens):
+        # iterate over trained events and try to match token by token
+        for event in self.eventsL:
+            if len(event.eventStr) != len(tokens):
+                continue
+
+            matched = True
+            for idx, token in enumerate(event.eventStr):
+                if token != '<*>' and token != tokens[idx]:
+                    matched = False
+                    break
+
+            if matched:
+                return event.eventId, ' '.join(event.eventStr)
+
+        # return default placeholders when no template matches
+        return 'UNMATCHED', 'UNMATCHED'

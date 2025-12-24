@@ -51,6 +51,8 @@ class LogParser:
         self.df_log = None
         self.rex = rex
         self.keep_para = keep_para
+        self.rootNode = None
+        self.logCluL = None
 
     def LCS(self, seq1, seq2):
         lengths = [[0 for j in range(len(seq2)+1)] for i in range(len(seq1)+1)]
@@ -225,9 +227,9 @@ class LogParser:
 
 
     def parse(self, logname):
-        starttime = datetime.now()  
+        starttime = datetime.now()
         print('Parsing file: ' + os.path.join(self.path, logname))
-        self.logname = logname  
+        self.logname = logname
         self.load_data()
         rootNode = Node()
         logCluL = []
@@ -271,6 +273,27 @@ class LogParser:
 
         self.outputResult(logCluL)
         print('Parsing done. [Time taken: {!s}]'.format(datetime.now() - starttime))
+
+    def match(self, log_line):
+        # prepare tokens using the same preprocessing logic
+        tokens = list(filter(lambda x: x != '', re.split(r'[\s=:,]', self.preprocess(log_line))))
+        fixed_tokens = [w for w in tokens if w != '<*>']
+
+        # search existing templates without modifying them
+        matchCluster = self.PrefixTreeMatch(self.rootNode, fixed_tokens, 0)
+        if matchCluster is None:
+            matchCluster = self.SimpleLoopMatch(self.logCluL, fixed_tokens)
+            if matchCluster is None:
+                matchCluster = self.LCSMatch(self.logCluL, tokens)
+
+        # fallback identifiers for unmatched lines
+        if matchCluster is None:
+            return 'UNMATCHED', 'UNMATCHED'
+
+        # compute identifiers in the same way as training
+        template_str = ' '.join(matchCluster.logTemplate)
+        event_id = hashlib.md5(template_str.encode('utf-8')).hexdigest()[0:8]
+        return event_id, template_str
 
     def load_data(self):
         headers, regex = self.generate_logformat_regex(self.logformat)
